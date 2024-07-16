@@ -1,7 +1,7 @@
 import System.Random
 import Control.Monad
-import Data.List (nub, intersect)
-import System.IO ()
+import Data.List (nub)
+import System.IO()
 
 type Battlefield = [[Int]]
 type Ship = [(Int, Int)]
@@ -30,7 +30,7 @@ showMainMenu = do
                 "| |_) / ____ \\| |     | |  | |____| |____ ____) | |  | |/ ^ \\| |",
                 "|____/_/    \\_\\_|     |_|  |______|______|_____/|_|  |_/_/ \\_\\_|",
 
-                
+
                 "                                                                       "]
 
     let prompt = "Argh, marujo! Seja bem-vindo! Pressione ENTER para iniciar a batalha, argh!"
@@ -39,7 +39,7 @@ showMainMenu = do
     putStrLn (centerLine prompt)
     putStrLn ""
     putStrLn ""
-    
+
 center :: [String] -> [String]
 center xs = map centerLine xs
 
@@ -75,7 +75,7 @@ inicializaCampoDeBatalha = replicate 6 (replicate 6 0)
 visualizaCampoDeBatalha :: Battlefield -> IO ()
 visualizaCampoDeBatalha battlefield = do
     putStrLn "\t1 \t2 \t3 \t4 \t5 \t6"
-    forM_ (zip [1..] battlefield) $ \(y, row) -> do
+    forM_ (zip [1 :: Int ..] battlefield) $ \(y, row) -> do
         putStr (show y)
         forM_ row $ \cell -> putStr (cellChar cell)
         putStrLn "\n\n"
@@ -85,8 +85,10 @@ visualizaCampoDeBatalha battlefield = do
     cellChar 1 = "\tX"
     cellChar _ = "\t?"
 
-tiroCerto :: Position -> Ship -> Ship -> Bool
-tiroCerto disparo corveta fragata = disparo `elem` corveta || disparo `elem` fragata
+tiroCerto :: Position -> Ship -> [(Int, Int, Int, Int)] -> Bool
+tiroCerto disparo corveta fragata = disparo `elem` corveta || any (posicaoNaFragata disparo) fragata
+  where
+    posicaoNaFragata (x, y) (fx1, fy1, fx2, fy2) = (x == fx1 && y == fy1) || (x == fx2 && y == fy2)
 
 atirar :: IO Position
 atirar = do
@@ -98,10 +100,19 @@ atirar = do
     return (linha - 1, coluna - 1)
 
 alteraCampoDeBatalha :: Position -> Battlefield -> Int -> Battlefield
-alteraCampoDeBatalha (x, y) battlefield marker =
-    let (before, row:after) = splitAt x battlefield
-        (rowBefore, _:rowAfter) = splitAt y row
-    in before ++ (rowBefore ++ [marker] ++ rowAfter) : after
+alteraCampoDeBatalha (x, y) battlefield marker
+    | x < 0 || x >= length battlefield || y < 0 || y >= length (head battlefield) = battlefield
+    | otherwise =
+        let (before, currentRow:after) = splitAt x battlefield
+            newRow = alterRow y currentRow marker
+        in before ++ [newRow] ++ after
+
+alterRow :: Int -> [Int] -> Int -> [Int]
+alterRow y row marker
+    | y < 0 || y >= length row = row
+    | otherwise =
+        let (rowBefore, _:rowAfter) = splitAt y row
+        in rowBefore ++ [marker] ++ rowAfter
 
 posicionaBarco :: IO Ship
 posicionaBarco = do
@@ -109,28 +120,26 @@ posicionaBarco = do
     let positions = take 2 $ nub $ randomRs ((0, 0), (5, 5)) g
     return positions
 
-posicionaNavio :: Ship -> IO Ship
+posicionaNavio :: Ship -> IO [(Int, Int, Int, Int)]
 posicionaNavio corveta = do
     g <- newStdGen
-    let positions = take 4 $ nub $ randomRs ((0, 0), (5, 5)) g
-    if length (intersect positions corveta) > 0
+    let positions = take 2 $ nub $ randomRs ((0, 0), (5, 5)) g
+    let fragata = if length positions == 2 then [(positions !! 0, positions !! 1)] else []
+    if any (`elem` corveta) (concatMap (\((x1, y1), (x2, y2)) -> [(x1, y1), (x2, y2)]) fragata)
         then posicionaNavio corveta
-        else return positions
+        else return $ map (\((x1, y1), (x2, y2)) -> (x1, y1, x2, y2)) fragata
 
-dicaErro :: Position -> Battlefield -> Int -> Ship -> Ship -> [Position] -> IO ()
-dicaErro (x, y) battlefield iteracoes corveta fragata hits = do
-    let dicaCorvetaX = length $ filter (\(cx, cy) -> cx == x && (cx, cy) `notElem` hits) corveta
-    let dicaCorvetaY = length $ filter (\(cx, cy) -> cy == y && (cx, cy) `notElem` hits) corveta
-    putStrLn $ "\nDica " ++ show iteracoes ++ ": Disparo na água!"
-    putStrLn $ "Linha " ++ show (x + 1) ++ " -> Há " ++ show dicaCorvetaX ++ " corvetas nesta linha"
-    putStrLn $ "Coluna " ++ show (y + 1) ++ " -> Há " ++ show dicaCorvetaY ++ " corvetas nesta coluna\n"
+dicaErro :: Position -> Int -> Ship -> [(Int, Int, Int, Int)] -> IO ()
+dicaErro (x, y) iteracoes corveta fragata = do
+    let dicaCorvetaX = length $ filter (\(cx, _) -> cx == x) corveta
+    let dicaCorvetaY = length $ filter (\(_, cy) -> cy == y) corveta
+    putStrLn $ "\nDica " ++ show iteracoes ++ ": Disparo na água! \nLinha " ++ show (x + 1) ++ " -> Há " ++ show dicaCorvetaX ++ " corvetas nesta linha\nColuna " ++ show (y + 1) ++ " -> Há " ++ show dicaCorvetaY ++ " corvetas nesta coluna\n"
 
-    let dicaFragataX = length $ filter (\(fx, fy) -> fx == x && (fx, fy) `notElem` hits) fragata
-    let dicaFragataY = length $ filter (\(fx, fy) -> fy == y && (fx, fy) `notElem` hits) fragata
-    putStrLn $ "Linha " ++ show (x + 1) ++ " -> Há " ++ show dicaFragataX ++ " fragatas nesta linha"
-    putStrLn $ "Coluna " ++ show (y + 1) ++ " -> Há " ++ show dicaFragataY ++ " fragatas nesta coluna\n"
-    
-gameLoop :: Battlefield -> Ship -> Ship -> [Position] -> Int -> Int -> Int -> IO ()
+    let dicaFragataX = length $ filter (\(fx1, _, fx2, _) -> fx1 == x || fx2 == x) fragata
+    let dicaFragataY = length $ filter (\(_, fy1, _, fy2) -> fy1 == y || fy2 == y) fragata
+    putStrLn $ "\nLinha " ++ show (x + 1) ++ " -> Há " ++ show dicaFragataX ++ " fragatas nesta linha\nColuna " ++ show (y + 1) ++ " -> Há " ++ show dicaFragataY ++ " fragatas nesta coluna\n"
+
+gameLoop :: Battlefield -> Ship -> [(Int, Int, Int, Int)] -> [Position] -> Int -> Int -> Int -> IO ()
 gameLoop battlefield corveta fragata hits municao iteracoes naviosAfundados
     | naviosAfundados == 6 = endGame True battlefield
     | iteracoes >= municao = endGame False battlefield
@@ -147,7 +156,7 @@ gameLoop battlefield corveta fragata hits municao iteracoes naviosAfundados
                 putStrLn "Acertou um navio!"
                 gameLoop battlefield' corveta fragata hits' municao (iteracoes + 1) (naviosAfundados + 1)
             else do
-                dicaErro disparo battlefield iteracoes corveta fragata hits'
+                dicaErro disparo iteracoes corveta fragata
                 gameLoop battlefield' corveta fragata hits' municao (iteracoes + 1) naviosAfundados
 
 endGame :: Bool -> Battlefield -> IO ()
