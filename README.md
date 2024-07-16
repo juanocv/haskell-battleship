@@ -1,7 +1,8 @@
 # BATTLESHλP
 
-Projeto 01 da disciplina de **Programação Funcional** do 2º quadrimestre de 2024 da Universidade Federal do ABC
-Realizado por **JUAN OLIVEIRA DE CARVALHO** (juanocv) e **FERNANDO GABRIEL CHACON FERNANDES TERUEL DO PRADO** (to add)
+Projeto 01 da disciplina de **Programação Funcional** do 2º quadrimestre de 2024 da Universidade Federal do ABC.
+
+Realizado por **JUAN OLIVEIRA DE CARVALHO** [(juanocv)](https://github.com/juanocv) e **FERNANDO GABRIEL CHACON FERNANDES TERUEL DO PRADO** (to add).
 
 ## TO-DOs (Necessário)
 - [X] Resolver a maioria dos erros
