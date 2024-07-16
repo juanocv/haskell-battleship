@@ -13,6 +13,7 @@ Realizado por **JUAN OLIVEIRA DE CARVALHO** [(juanocv)](https://github.com/juano
 ## TO-DOs (Desejável)
 - [ ] Resolver a maioria dos warnings
 - [ ] Realizar testes unitários
+- [ ] Comentar todo o código
 - [ ] Abrir programa em janela isolada
 - [ ] Adicionar cores para cada tipo de navio
 - [ ] Adicionar caracteres distintos para cada tipo de navio
