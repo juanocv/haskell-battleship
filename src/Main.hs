@@ -149,7 +149,7 @@ dicaErro (x, y) iteracoes corvetas fragatas sunken = do
 
     let dicaFragataX = length $ filter (\(fx1, _, fx2, _) -> fx1 == x || fx2 == x) remainingFragatas
     let dicaFragataY = length $ filter (\(_, fy1, _, fy2) -> fy1 == y || fy2 == y) remainingFragatas
-    putStrLn $ "\nLinha " ++ show (x + 1) ++ " -> Há " ++ show dicaFragataX ++ " fragatas nesta linha\nColuna " ++ show (y + 1) ++ " -> Há " ++ show dicaFragataY ++ " fragatas nesta coluna\n"
+    putStrLn $ "Linha " ++ show (x + 1) ++ " -> Há " ++ show dicaFragataX ++ " fragatas nesta linha\nColuna " ++ show (y + 1) ++ " -> Há " ++ show dicaFragataY ++ " fragatas nesta coluna\n"
 
 gameLoop :: Battlefield -> Ship -> [(Int, Int, Int, Int)] -> [Position] -> Ship -> Int -> Int -> Int -> IO ()
 gameLoop battlefield corvetas fragatas hits sunken municao iteracoes naviosAfundados
