@@ -1,5 +1,5 @@
 # BATTLESHλP
-Discontinued project :(
+Discontinued battleship project :(
 
 ## How to run?
 On a LINUX enviroment:
