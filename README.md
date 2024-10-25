@@ -1,5 +1,6 @@
 # BATTLESHλP
 Discontinued battleship project :(
+Basically a monolithic spaghetti code that I have created with the help of AI when I was still learning Haskell.
 
 ## How to run?
 On a LINUX enviroment:
